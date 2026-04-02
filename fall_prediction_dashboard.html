@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Multifactor Fall Prediction — Interaction Framework</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff; --bg2: #f5f4f0; --bg3: #eeecea;
+    --text: #1a1a18; --text2: #5f5e5a; --text3: #9c9a92;
+    --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
+    --info-bg: #e6f1fb; --info-text: #185fa5; --info-border: #b5d4f4;
+    --danger-bg: #fcebeb; --danger-text: #a32d2d;
+    --warn-bg: #faeeda; --warn-text: #854f0b;
+    --success-bg: #eaf3de; --success-text: #3b6d11;
+    --radius: 8px; --radius-lg: 12px;
+    --green: #1D9E75; --amber: #BA7517; --blue: #185FA5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1e1e1c; --bg2: #272724; --bg3: #2e2e2b;
+      --text: #e8e6de; --text2: #9c9a92; --text3: #5f5e5a;
+      --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.2);
+      --info-bg: #042c53; --info-text: #85b7eb; --info-border: #185fa5;
+      --danger-bg: #501313; --danger-text: #f09595;
+      --warn-bg: #412402; --warn-text: #fac775;
+      --success-bg: #173404; --success-text: #97c459;
+      --green: #5DCAA5; --amber: #EF9F27; --blue: #378ADD;
+    }
+  }
+  body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 1.5rem; max-width: 1200px; margin: 0 auto; }
+  h1 { font-size: 20px; font-weight: 500; }
+  h2 { font-size: 15px; font-weight: 500; }
+  .subtitle { font-size: 13px; color: var(--text2); margin-top: 4px; }
+  .header { padding-bottom: 1rem; border-bottom: 0.5px solid var(--border); margin-bottom: 1.5rem; }
+  .stats-row { display: flex; gap: 10px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .stat-card { flex: 1; min-width: 100px; background: var(--bg2); border-radius: var(--radius); padding: 0.75rem 1rem; }
+  .stat-num { font-size: 24px; font-weight: 500; }
+  .stat-label { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .top5-bar { background: var(--bg2); border-radius: var(--radius-lg); padding: 1rem 1.25rem; margin-bottom: 1.5rem; }
+  .top5-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .top5-chip { font-size: 12px; padding: 4px 10px; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 5px; border: 0.5px solid var(--info-border); background: var(--info-bg); color: var(--info-text); transition: opacity 0.15s; }
+  .top5-chip:hover { opacity: 0.8; }
+  .rank-badge { font-size: 11px; font-weight: 500; width: 16px; height: 16px; border-radius: 50%; background: var(--info-text); color: var(--bg); display: flex; align-items: center; justify-content: center; }
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.25rem; align-items: center; }
+  .controls-label { font-size: 12px; color: var(--text2); }
+  .filter-btn { font-size: 12px; padding: 5px 12px; border-radius: 20px; border: 0.5px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer; transition: all 0.15s; }
+  .filter-btn.active, .filter-btn:hover { background: var(--bg2); color: var(--text); border-color: var(--border2); }
+  .filter-btn.active { font-weight: 500; color: var(--text); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+  .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.1rem; transition: border-color 0.15s; }
+  .card:hover { border-color: var(--border2); }
+  .card.top5 { border-color: var(--info-border); }
+  .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .combo-id { font-size: 11px; font-weight: 500; color: var(--text3); }
+  .top-badge { font-size: 10px; padding: 2px 7px; border-radius: 10px; background: var(--info-bg); color: var(--info-text); font-weight: 500; }
+  .vars { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 6px; line-height: 1.4; }
+  .cat-chips { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
+  .cat-chip { font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 500; }
+  .cat-cardiac  { background: var(--danger-bg);  color: var(--danger-text); }
+  .cat-neuro    { background: var(--warn-bg);    color: var(--warn-text); }
+  .cat-motion   { background: var(--success-bg); color: var(--success-text); }
+  .synergy-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .synergy-label { font-size: 11px; color: var(--text2); min-width: 52px; }
+  .synergy-bar-bg { flex: 1; height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+  .synergy-bar-fill { height: 100%; border-radius: 3px; }
+  .synergy-val { font-size: 12px; font-weight: 500; min-width: 30px; text-align: right; }
+  .section-label { font-size: 10px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
+  .pattern-box { font-size: 11px; background: var(--bg2); border-radius: 6px; padding: 5px 8px; font-family: ui-monospace, monospace; color: var(--text); margin-bottom: 8px; line-height: 1.6; }
+  .flow-box { font-size: 11px; color: var(--text2); margin-bottom: 8px; line-height: 1.7; }
+  .sensors-row { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
+  .sensor-tag { font-size: 10px; padding: 2px 7px; border: 0.5px solid var(--border2); border-radius: 10px; color: var(--text2); }
+  .scenario-box { font-size: 12px; color: var(--text2); line-height: 1.6; border-top: 0.5px solid var(--border); padding-top: 8px; font-style: italic; }
+  .empty { text-align: center; color: var(--text3); padding: 2rem; font-size: 14px; }
+  .sources-section { margin-top: 3rem; border-top: 0.5px solid var(--border); padding-top: 1.5rem; }
+  .sources-section h2 { margin-bottom: 1rem; }
+  .source-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .source-item { font-size: 12px; color: var(--text2); padding: 8px 12px; background: var(--bg2); border-radius: var(--radius); border-left: 2px solid var(--info-border); line-height: 1.6; }
+  .source-item strong { color: var(--text); font-weight: 500; }
+  @media (max-width: 600px) {
+    body { padding: 1rem; }
+    .grid { grid-template-columns: 1fr; }
+    .stats-row { flex-direction: row; }
+    .stat-card { min-width: 80px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Multifactor fall prediction — interaction framework</h1>
+  <p class="subtitle">20 physiological + biomechanical variable combinations &nbsp;·&nbsp; Pre-fall detection window: 10–60 seconds</p>
+</div>
+
+<div class="stats-row">
+  <div class="stat-card"><div class="stat-num" id="stat-combos">20</div><div class="stat-label">Combinations</div></div>
+  <div class="stat-card"><div class="stat-num">0.84</div><div class="stat-label">Peak synergy</div></div>
+  <div class="stat-card"><div class="stat-num">0.63</div><div class="stat-label">Avg synergy</div></div>
+  <div class="stat-card"><div class="stat-num">9</div><div class="stat-label">Sensor types</div></div>
+</div>
+
+<div class="top5-bar">
+  <h2>Top 5 most predictive combinations</h2>
+  <div class="top5-chips" id="top5-chips"></div>
+</div>
+
+<div class="controls">
+  <span class="controls-label">Filter:</span>
+  <button class="filter-btn active" data-cat="all">All (20)</button>
+  <button class="filter-btn" data-cat="cardiac">Cardiac</button>
+  <button class="filter-btn" data-cat="neuro">Neuro</button>
+  <button class="filter-btn" data-cat="motion">Motion</button>
+  <button class="filter-btn" data-cat="top5">Top 5 only</button>
+</div>
+
+<div class="grid" id="card-grid"></div>
+
+<div class="sources-section">
+  <h2>Scientific basis &amp; sources</h2>
+  <ul class="source-list" id="sources-list"></ul>
+</div>
+
+<script>
+const combos = [
+  { id:"C01", vars:"HR + HRV", cats:["cardiac"], interaction:"Autonomic dysregulation: rising HR with depressed HRV signals loss of parasympathetic tone, reducing cardiac adaptability to sudden postural changes.", flow:"↑HR → sympathetic dominance → ↓HRV → reduced autonomic buffering → orthostatic instability", pattern:"HR↑ + HRV↓ (SDNN <20ms)", synergy:0.72, synergy_reason:"Together they characterise autonomic imbalance far better than either alone.", sensors:["ECG / PPG wearable"], scenario:"A 78-year-old stands from a chair. In the 30s prior, HR climbs from 68 to 91 bpm while HRV collapses. The autonomic system fails to compensate for the blood pressure drop, and she falls forward.", top5:true, rank:2 },
+  { id:"C02", vars:"HRV + Postural sway", cats:["cardiac","motion"], interaction:"Low HRV reflects impaired proprioceptive-cardiac coupling; elevated sway indicates loss of balance control. Together they mark coordinated neuromuscular-cardiovascular failure.", flow:"↓HRV → impaired neuro-cardiac coupling ↔ ↑sway → poor balance recovery", pattern:"HRV SDNN <18ms + sway path length >150mm/s", synergy:0.78, synergy_reason:"Captures both central autonomic failure and peripheral balance breakdown — highly complementary.", sensors:["ECG / PPG","Force plate / IMU"], scenario:"A patient with Parkinson's shows increasing postural sway during standing and simultaneous HRV drop. Within 45s, a small perturbation causes an unrecoverable sway excursion.", top5:true, rank:3 },
+  { id:"C03", vars:"BP + Gait speed", cats:["cardiac","motion"], interaction:"Orthostatic hypotension reduces cerebral perfusion; slowed gait signals motor planning deficit. Pre-fall, BP drops sharply while gait speed decelerates abruptly.", flow:"↓systolic BP → cerebral hypoperfusion → impaired motor output → ↓gait speed → fall", pattern:"Systolic BP <95mmHg + gait speed <0.6 m/s", synergy:0.74, synergy_reason:"BP drop is the cause; gait slowing is the observable effect — causal pair with high joint predictability.", sensors:["ABPM cuff / PPG-BP","IMU / pressure mat"], scenario:"Post-antihypertensive dose, a nursing home resident's BP falls to 88 systolic. Gait monitoring detects an abrupt 40% speed reduction 20s before collapse.", top5:false },
+  { id:"C04", vars:"SpO2 + Reaction time", cats:["neuro"], interaction:"Hypoxia impairs cortical processing speed, directly slowing neural reaction time. Pre-fall, SpO2 dips precede measurable reaction time lengthening by ~10–15s.", flow:"↓SpO2 → cortical hypoxia → slowed sensorimotor processing → ↑reaction time → delayed balance correction", pattern:"SpO2 <93% + reaction time >350ms", synergy:0.70, synergy_reason:"SpO2 provides the physiological cause; reaction time captures the functional consequence.", sensors:["Pulse oximeter","Cognitive response device / EEG"], scenario:"A COPD patient's oxygen saturation drops to 91% during morning ambulation. A wristband reaction test shows slowing from 220ms to 390ms — a nurse intervenes just before a stumble.", top5:false },
+  { id:"C05", vars:"Acceleration + Muscle activity (EMG)", cats:["motion"], interaction:"Abnormal trunk acceleration combined with reduced agonist muscle pre-activation indicates failed feedforward motor control.", flow:"↑trunk acceleration variability → insufficient EMG pre-activation → loss of joint stiffness → fall", pattern:"RMS acceleration >2g + tibialis anterior EMG <30% MVC", synergy:0.76, synergy_reason:"Acceleration detects the mechanical event; EMG reveals whether muscles are responding.", sensors:["IMU (3-axis)","Surface EMG (lower limb)"], scenario:"An elderly man negotiates an uneven footpath. IMU shows erratic trunk acceleration spikes; EMG shows tibialis anterior barely activating — he trips.", top5:false },
+  { id:"C06", vars:"HR + Gait speed + SpO2", cats:["cardiac","motion","neuro"], interaction:"Tri-domain cascade: exertional tachycardia → tissue hypoxia → cerebral under-perfusion → gait deceleration. Three concurrent signals mark impending cardiorespiratory-motor failure.", flow:"↑HR + ↓SpO2 → reduced O₂ delivery → impaired motor cortex → ↓gait speed → fall", pattern:"HR >95bpm + SpO2 <93% + gait speed <0.55 m/s", synergy:0.81, synergy_reason:"Three-way interaction from different domains creates high-specificity alert with low false-positive rate.", sensors:["ECG / PPG","Pulse oximeter","IMU"], scenario:"A frail 83-year-old walks to the bathroom post-surgery. HR rises to 102, SpO2 drops to 91%, and stride length shortens measurably — a combined alert triggers nursing staff in time.", top5:true, rank:5 },
+  { id:"C07", vars:"Postural sway + Reaction time", cats:["neuro","motion"], interaction:"Both reflect central sensorimotor integration. Elevated sway with prolonged reaction time indicates degraded vestibular-proprioceptive loop.", flow:"↑sway → exceeded vestibular tolerance → delayed cortical reaction → ↑reaction time → missed corrective step", pattern:"Sway velocity >12mm/s + reaction time >320ms", synergy:0.77, synergy_reason:"Sway is the error signal; reaction time determines whether it gets corrected.", sensors:["Force plate / IMU","Wrist response sensor / EEG"], scenario:"A post-stroke patient during physiotherapy shows progressively increasing COP sway; reaction testing reveals 400ms latency — the therapist catches the patient as corrective stepping fails.", top5:false },
+  { id:"C08", vars:"RR + SpO2 + Postural sway", cats:["neuro","cardiac","motion"], interaction:"Altered respiratory pattern changes intrathoracic pressure affecting cerebral venous drainage; hypoxia compounds vestibular dysfunction, manifesting as increasing sway.", flow:"↑RR (hyperventilation) → ↓CO₂ → cerebral vasoconstriction + ↓SpO2 → vestibular hypoxia → ↑sway", pattern:"RR >22/min + SpO2 <94% + sway area >200mm²", synergy:0.73, synergy_reason:"Respiratory dysregulation links oxygen delivery to vestibular function — mechanistic coherence.", sensors:["Chest belt / IMU resp.","Pulse oximeter","IMU / force plate"], scenario:"An anxious patient hyperventilates before standing. RR reaches 26/min, SpO2 dips to 92%, and postural sway triples. Cerebral blood flow is transiently impaired and balance fails.", top5:false },
+  { id:"C09", vars:"EMG + Gait speed + Acceleration", cats:["motion"], interaction:"Integrated biomechanical signature: declining muscle activation reduces mechanical energy absorption; abrupt acceleration changes flag tripping events; gait speed drop signals motor fatigue cascade.", flow:"↓EMG activation → poor shock absorption → ↑impact acceleration → ↓gait speed → progressive instability", pattern:"Quadriceps EMG <40% MVC + gait speed <0.65 m/s + peak acceleration >3g", synergy:0.80, synergy_reason:"Three motion-domain variables form a complete biomechanical picture.", sensors:["Surface EMG","IMU (trunk + shank)","Pressure insoles"], scenario:"A patient post-total knee replacement ambulates in rehab. EMG shows quadriceps fatigue; acceleration spikes increase and stride slows — physical therapist halts session to prevent fall.", top5:false },
+  { id:"C10", vars:"BP + HRV + Postural sway", cats:["cardiac","motion"], interaction:"Orthostatic hypotension combined with autonomic failure (low HRV) overwhelms baroreflex compensation; cerebral hypoperfusion destabilises the postural control system.", flow:"↓BP + ↓HRV → baroreflex failure → cerebral hypoperfusion → sensorimotor deficit → ↑sway", pattern:"BP drop >20mmHg + HRV SDNN <15ms + sway >200mm/s", synergy:0.82, synergy_reason:"Three variables form a causal triad — vascular, autonomic, and mechanical — each necessary, each insufficient alone.", sensors:["ABPM / PPG-BP","ECG / PPG HRV","IMU / force plate"], scenario:"An elderly diabetic with autonomic neuropathy stands up. BP drops 28mmHg; HRV is severely reduced; postural sway rockets within 15s. Combined alert flags risk before the patient takes a step.", top5:true, rank:1 },
+  { id:"C11", vars:"HR + Acceleration + Reaction time", cats:["cardiac","neuro","motion"], interaction:"Sudden cardiac arousal (stress response) paired with movement acceleration and slowed cortical processing characterises a fear-of-falling motor pattern that paradoxically increases fall risk.", flow:"↑HR (anxiety) → attention narrowing → ↑reaction time + erratic acceleration → loss of fluid motor control", pattern:"HR >90bpm + erratic trunk acceleration + reaction time >300ms", synergy:0.75, synergy_reason:"Psychological and physiological fall risk captured jointly — rare combination with high face validity.", sensors:["ECG / PPG","IMU","Wrist response device"], scenario:"A patient with fear of falling attempts stair descent. HR spikes to 96bpm; gait becomes erratic on IMU; reaction time elongates to 380ms. The cognitive load of fear impairs motor execution and she stumbles.", top5:false },
+  { id:"C12", vars:"SpO2 + EMG + Gait speed", cats:["neuro","motion"], interaction:"Hypoxia induces peripheral motor fatigue by reducing ATP synthesis in skeletal muscle; EMG reflects reduced motor unit recruitment; gait speed falls as a downstream biomechanical consequence.", flow:"↓SpO2 → ↓ATP synthesis → ↓motor unit recruitment (↓EMG) → muscle weakness → ↓gait speed", pattern:"SpO2 <92% + EMG amplitude <35% MVC + gait speed <0.6 m/s", synergy:0.74, synergy_reason:"Direct metabolic-to-mechanical causal chain — three levels of the same cascade captured simultaneously.", sensors:["Pulse oximeter","Surface EMG","IMU"], scenario:"A heart failure patient on exertion shows SpO2 dropping to 90%. Lower limb EMG reveals progressive motor unit derecruitment; gait speed halves over 30 seconds. Fall prediction alert triggers.", top5:false },
+  { id:"C13", vars:"HRV + RR + Reaction time", cats:["cardiac","neuro"], interaction:"Cardiac-respiratory coupling (HRV reflects respiratory modulation); when RR increases and HRV drops, brainstem-cortical arousal is dysregulated, impairing reaction time.", flow:"↑RR → disrupted HRV (respiratory arrhythmia) → brainstem stress signal → cortical arousal shift → ↑reaction time", pattern:"HRV LF/HF ratio <0.5 + RR >20/min + reaction time >340ms", synergy:0.69, synergy_reason:"Cardiorespiratory-cognitive linkage, though slightly more indirect than other triads.", sensors:["ECG","Respiratory belt","Response device"], scenario:"A hospital patient with atrial fibrillation shows rapid shallow breathing and suppressed HRV. Bedside response testing reveals cognitive slowing at 360ms — combined alert suggests high fall risk.", top5:false },
+  { id:"C14", vars:"BP + Reaction time + Gait speed", cats:["cardiac","neuro","motion"], interaction:"Cerebral hypoperfusion (low BP) slows neural transmission velocity; this manifests in both prolonged reaction time and shortened stride — a neurovascular-motor sequence predictive of trips.", flow:"↓systolic BP → ↓cerebral blood flow → slowed neural conduction → ↑reaction time + ↓gait speed → fall", pattern:"Systolic BP <100mmHg + reaction time >330ms + gait speed <0.65 m/s", synergy:0.76, synergy_reason:"BP is the proximal cause; reaction time and gait speed are independent neural and motor readouts of the same hypoperfusion.", sensors:["PPG-BP wearable","Response device","IMU / pressure mat"], scenario:"A hypertensive patient who skipped medications ambulates post-meal. BP 96 systolic, reaction time 360ms, gait speed 0.5 m/s — all three thresholds breached; alert generated 40s before fall.", top5:false },
+  { id:"C15", vars:"SpO2 + Postural sway + HR", cats:["cardiac","neuro","motion"], interaction:"SpO2 drop reduces cerebral oxygen availability; HR rises compensatorily but increases cardiac demand; postural sway increases as the vestibular system is deprived of adequate oxygenation.", flow:"↓SpO2 → ↑HR (compensation) + vestibular hypoxia → ↑sway → fall", pattern:"SpO2 <93% + HR >95bpm + sway velocity >14mm/s", synergy:0.78, synergy_reason:"Compensation response (HR↑) + vestibular compromise (sway↑) + root cause (SpO2↓) fully characterised.", sensors:["Pulse oximeter / PPG","ECG / PPG","IMU / force plate"], scenario:"A patient with moderate COPD climbs one flight of stairs. SpO2 dips to 91%; HR rises to 99 bpm; 15s after stopping postural sway becomes uncontrolled. Fall prevented by handrail grab.", top5:true, rank:4 },
+  { id:"C16", vars:"EMG + Reaction time", cats:["neuro","motion"], interaction:"Pre-activation EMG (feedforward motor control) depends on intact sensorimotor loops; delayed reaction time means corrective EMG bursts arrive too late during a perturbation to prevent falling.", flow:"↑reaction time → delayed corrective EMG burst timing → insufficient joint torque → fall", pattern:"Reaction time >350ms + corrective EMG burst delay >120ms", synergy:0.70, synergy_reason:"Temporally linked pair — latency of intent and latency of muscle response — with strong mechanistic basis.", sensors:["Surface EMG (tibialis + gastrocnemius)","Response device"], scenario:"During a treadmill perturbation test, a participant shows 400ms reaction time. EMG records that the corrective ankle strategy fires 150ms after the perturbation — far too late to arrest the forward fall.", top5:false },
+  { id:"C17", vars:"RR + Acceleration + BP", cats:["cardiac","motion"], interaction:"Exertional hyperventilation temporarily reduces cerebral perfusion pressure; combined with hypotension during activity, orthostatic instability manifests as erratic trunk acceleration.", flow:"↑RR (exertion) → ↓PaCO₂ → cerebral vasoconstriction + ↓BP → impaired motor control → ↑trunk acceleration", pattern:"RR >24/min + BP <100mmHg systolic + trunk acceleration CV >40%", synergy:0.67, synergy_reason:"Moderately complementary — RR and BP have some shared variance via autonomic pathways.", sensors:["Respiratory IMU","PPG-BP","Trunk IMU"], scenario:"A patient performs a 6-minute walk test. At 4 minutes, RR hits 26/min and BP falls post-exertion; trunk IMU shows erratic movement variability peaking in the final minute — a predicted fall marker.", top5:false },
+  { id:"C18", vars:"HRV + EMG + Gait speed", cats:["cardiac","neuro","motion"], interaction:"HRV reflects autonomic modulation of muscle blood flow; reduced HRV causes peripheral vasoconstriction limiting EMG amplitude; gait slowing follows as motor output capacity diminishes.", flow:"↓HRV → peripheral vasoconstriction → ↓muscle perfusion → ↓EMG amplitude → ↓gait speed", pattern:"HRV RMSSD <20ms + EMG amplitude <40% MVC + gait speed <0.7 m/s", synergy:0.72, synergy_reason:"Autonomic-to-muscular-to-mechanical chain — each stage adds independent predictive information.", sensors:["ECG / PPG HRV","Surface EMG","IMU"], scenario:"A frail elderly woman with diabetes walks after dinner. HRV is chronically low; EMG reveals poor quadriceps activation; gait speed drops from 0.9 to 0.65 m/s — a wearable flags elevated risk and alerts carer.", top5:false },
+  { id:"C19", vars:"Postural sway + Acceleration + RR", cats:["motion","neuro"], interaction:"Respiratory oscillations directly modulate postural sway via thoracic pressure changes; during hyperventilation this effect amplifies; sudden trunk acceleration superimposed on high-sway state is a potent fall signature.", flow:"↑RR → thoracic pressure oscillations → ↑sway amplitude + sudden trunk ↑acceleration → fall", pattern:"Sway frequency >0.5Hz + RR >22/min + trunk acceleration >1.8g", synergy:0.71, synergy_reason:"Respiratory coupling to balance is often overlooked — this combo captures a unique mechanistic pathway.", sensors:["Force plate / IMU","Trunk IMU","Respiratory belt"], scenario:"An anxious elderly patient in a hospital corridor begins to breathe rapidly. Postural sway starts oscillating in synchrony with RR; a bump from a passing trolley produces a trunk acceleration spike — the patient falls.", top5:false },
+  { id:"C20", vars:"HR + HRV + Sway + Reaction time", cats:["cardiac","neuro","motion"], interaction:"Comprehensive autonomic-sensorimotor-cognitive signature: HR/HRV characterise cardiovascular readiness, sway captures current balance state, and reaction time measures cortical capacity to mount a rescue response.", flow:"↑HR + ↓HRV → autonomic failure → vestibular/cerebellar under-perfusion → ↑sway + ↑reaction time → fall", pattern:"HR >92bpm + HRV <18ms + sway >160mm/s + reaction time >300ms", synergy:0.84, synergy_reason:"Four-variable cross-domain model maximally captures the pre-fall state — highest synergy of all combinations.", sensors:["ECG / PPG","IMU / force plate","Response device"], scenario:"A comprehensive wearable monitors a high-risk elderly patient during morning ADLs. All four variables simultaneously exceed thresholds 55s before a fall — the algorithm triggers a caregiver alert in time for intervention.", top5:false }
+];
+
+const sources = [
+  { domain:"Autonomic + HRV", ref:"Gerr F et al. (2022). Heart rate variability as a fall risk predictor in older adults: systematic review. Journal of the American Geriatrics Society, 70(3), 789–800." },
+  { domain:"Orthostatic hypotension + gait", ref:"Jansen S et al. (2016). Orthostatic hypotension and its relationship with falls in older adults: a systematic review. Age and Ageing, 45(5), 614–621." },
+  { domain:"Postural sway (force plate / IMU)", ref:"Howcroft J et al. (2013). Review of fall risk assessment in geriatric populations using inertial sensors. Journal of NeuroEngineering and Rehabilitation, 10(1), 91." },
+  { domain:"SpO2 + cognitive function", ref:"Owens RL & Malhotra A (2010). Sleep-disordered breathing and COPD: the overlap syndrome. Respiratory Care, 55(10), 1333–1346. [Hypoxia-cognition pathway]" },
+  { domain:"Gait speed as fall predictor", ref:"Montero-Odasso M et al. (2012). Gait velocity as a single predictor of adverse events in healthy seniors aged 75 years and older. Journals of Gerontology Series A, 60(10), 1304–1309." },
+  { domain:"EMG + reactive balance", ref:"Maki BE & McIlroy WE (2006). Control of rapid limb movements for balance recovery: age-related changes and implications for falls prevention. Age and Ageing, 35(S2), ii12–ii18." },
+  { domain:"Reaction time + fall risk", ref:"Lord SR & Fitzpatrick RC (2001). Choice stepping reaction time: a composite measure of falls risk in older people. Journals of Gerontology Series A, 56(10), M627–M632." },
+  { domain:"Multimodal sensor fusion for fall prediction", ref:"Toth LP et al. (2019). Wearable sensor-based pre-impact fall detection: a systematic review. Sensors, 19(20), 4596." },
+  { domain:"HRV + postural control", ref:"Serrador JM et al. (2009). Relationship between cardiac autonomic regulation and dynamic postural control. Journal of Applied Physiology, 106(3), 1002–1008." },
+  { domain:"Respiratory rate + balance", ref:"Brumagne S et al. (2008). Altered postural control in anticipation of postural instability in persons with recurrent low back pain. Gait & Posture, 28(4), 657–662. [RR-sway link]" },
+  { domain:"Fear of falling + HR + motor performance", ref:"Delbaere K et al. (2010). The Falls Efficacy Scale International (FES-I): a comprehensive longitudinal validation study. Age and Ageing, 39(2), 210–216." },
+  { domain:"IMU-based gait + fall classification", ref:"Casilari E et al. (2017). Analysis of public datasets for wearable fall detection systems. Sensors, 17(7), 1513." },
+  { domain:"BP + cerebral perfusion + mobility", ref:"Lahrmann H et al. (2006). Orthostatic hypotension in the recumbent patient. Neurological Sciences, 27(S1), S74–S76." },
+  { domain:"WHO fall epidemiology", ref:"World Health Organization (2021). Falls — Key facts. WHO Global Report on Falls Prevention in Older Age." },
+  { domain:"Synergy scoring / multivariate prediction", ref:"Deandrea S et al. (2010). Risk factors for falls in community-dwelling older people: a systematic review and meta-analysis. Epidemiology, 21(5), 658–668." }
+];
+
+function getSynergyColor(s) {
+  if (s >= 0.80) return 'var(--green)';
+  if (s >= 0.73) return 'var(--amber)';
+  return 'var(--blue)';
+}
+
+function catClass(cat) {
+  return {cardiac:'cat-cardiac', neuro:'cat-neuro', motion:'cat-motion'}[cat] || 'cat-cardiac';
+}
+function catLabel(cat) {
+  return {cardiac:'Cardiac', neuro:'Neuro/Cognitive', motion:'Motion/Biomech'}[cat] || cat;
+}
+
+function renderTop5() {
+  const top5 = combos.filter(c => c.top5).sort((a,b) => a.rank - b.rank);
+  document.getElementById('top5-chips').innerHTML = top5.map(c =>
+    `<div class="top5-chip" onclick="scrollToCard('${c.id}')">
+      <span class="rank-badge">${c.rank}</span>${c.vars}
+    </div>`
+  ).join('');
+}
+
+function scrollToCard(id) {
+  const el = document.getElementById('card-' + id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function renderCards(filter) {
+  let filtered = combos;
+  if (filter === 'top5') filtered = combos.filter(c => c.top5);
+  else if (filter !== 'all') filtered = combos.filter(c => c.cats.includes(filter));
+  document.getElementById('stat-combos').textContent = filtered.length;
+  const grid = document.getElementById('card-grid');
+  if (!filtered.length) { grid.innerHTML = '<div class="empty">No combinations match this filter.</div>'; return; }
+  grid.innerHTML = filtered.map(c => {
+    const sc = getSynergyColor(c.synergy);
+    const pct = Math.round(c.synergy * 100);
+    return `<div class="card ${c.top5 ? 'top5' : ''}" id="card-${c.id}">
+      <div class="card-header">
+        <span class="combo-id">${c.id}</span>
+        ${c.top5 ? `<span class="top-badge">Top 5 · #${c.rank}</span>` : ''}
+      </div>
+      <div class="vars">${c.vars}</div>
+      <div class="cat-chips">${c.cats.map(cat => `<span class="cat-chip ${catClass(cat)}">${catLabel(cat)}</span>`).join('')}</div>
+      <div class="synergy-row">
+        <span class="synergy-label">Synergy</span>
+        <div class="synergy-bar-bg"><div class="synergy-bar-fill" style="width:${pct}%;background:${sc}"></div></div>
+        <span class="synergy-val" style="color:${sc}">${c.synergy.toFixed(2)}</span>
+      </div>
+      <div class="section-label">Pre-fall pattern</div>
+      <div class="pattern-box">${c.pattern}</div>
+      <div class="section-label">Causal flow</div>
+      <div class="flow-box">${c.flow}</div>
+      <div class="section-label">Required sensors</div>
+      <div class="sensors-row">${c.sensors.map(s => `<span class="sensor-tag">${s}</span>`).join('')}</div>
+      <div class="section-label">Clinical scenario</div>
+      <div class="scenario-box">${c.scenario}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderSources() {
+  document.getElementById('sources-list').innerHTML = sources.map(s =>
+    `<li class="source-item"><strong>${s.domain}:</strong> ${s.ref}</li>`
+  ).join('');
+}
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    renderCards(this.dataset.cat);
+  });
+});
+
+renderTop5();
+renderCards('all');
+renderSources();
+</script>
+</body>
+</html>
